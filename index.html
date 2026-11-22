@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecallRocket · MemoryMint Marathon</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-badge">🚀</div>
+      <div>
+        <h1>RecallRocket</h1>
+        <p>MemoryMint Marathon · SM-2 Engine</p>
+      </div>
+    </div>
+
+    <nav class="nav-pills" role="tablist">
+      <button class="pill-tab active" data-tab="study">Study Deck</button>
+      <button class="pill-tab" data-tab="curve">Retention Curve</button>
+      <button class="pill-tab" data-tab="leaderboard">Cohort Leaderboard</button>
+    </nav>
+
+    <div class="status-cluster">
+      <div class="streak-chip" title="Normalized ISO UTC Daily Streak">
+        <span>🔥 <strong id="streakDays">0</strong>d</span>
+        <span class="tier-tag" id="tierBadge">Starter</span>
+      </div>
+      <button id="themeBtn" class="icon-toggle" title="Switch Light/Dark Theme">☀️</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- TAB 1: STUDY DECK -->
+    <section id="panel-study" class="panel active">
+      <div class="control-strip glass">
+        <div class="deck-group">
+          <span class="label-sm">DECK</span>
+          <select id="deckSelector"></select>
+          <span id="dueChip" class="due-chip">0 due today</span>
+        </div>
+
+        <div class="btn-group">
+          <button id="addDeckBtn" class="btn btn-ghost">+ Deck</button>
+          <button id="addCardBtn" class="btn btn-accent">+ Card</button>
+          <button id="csvExportBtn" class="btn btn-ghost" title="Export Deck CSV">⬇ CSV</button>
+          <label class="btn btn-ghost" title="Import CSV (Question,Answer)">
+            ⬆ CSV
+            <input type="file" id="csvImportInput" accept=".csv" hidden />
+          </label>
+        </div>
+      </div>
+
+      <!-- ACTIVE STUDY STAGE -->
+      <div id="studyZone" class="study-zone">
+        <div class="hud-bar">
+          <span id="cardIndexText">Card 1 of 10</span>
+          <div class="sm2-pills">
+            <span class="stat-tag" id="efTag">EF: 2.50</span>
+            <span class="stat-tag" id="intTag">Interval: 0d</span>
+            <span class="stat-tag" id="repTag">Reps: 0</span>
+          </div>
+        </div>
+
+        <div class="progress-rail">
+          <div id="progressBar" class="progress-fill"></div>
+        </div>
+
+        <div class="card-viewport" id="cardViewport">
+          <div class="card-3d" id="card3d">
+            <div class="face face-front glass">
+              <div class="face-top">
+                <span class="side-pill">QUESTION</span>
+                <button type="button" class="tts-btn" id="ttsFront" title="Read Question Aloud">🔊 Listen</button>
+              </div>
+              <div id="frontBody" class="card-text"></div>
+              <div class="face-bottom">Click card or press <kbd>Space</kbd> to reveal answer</div>
+            </div>
+
+            <div class="face face-back glass">
+              <div class="face-top">
+                <span class="side-pill accent">ANSWER</span>
+                <button type="button" class="tts-btn" id="ttsBack" title="Read Answer Aloud">🔊 Listen</button>
+              </div>
+              <div id="backBody" class="card-text"></div>
+              <div class="face-bottom">Rate recall accuracy below (<kbd>1</kbd> – <kbd>5</kbd>)</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="gradeDeck" class="grade-deck hidden">
+          <button class="grade-card g1" data-q="1">
+            <span class="g-num">1</span>
+            <span class="g-title">Blackout</span>
+            <span class="g-next">Reset · 1d</span>
+          </button>
+          <button class="grade-card g2" data-q="2">
+            <span class="g-num">2</span>
+            <span class="g-title">Hard</span>
+            <span class="g-next">Reset · 1d</span>
+          </button>
+          <button class="grade-card g3" data-q="3">
+            <span class="g-num">3</span>
+            <span class="g-title">Good</span>
+            <span class="g-next" id="next-3">1d</span>
+          </button>
+          <button class="grade-card g4" data-q="4">
+            <span class="g-num">4</span>
+            <span class="g-title">Easy</span>
+            <span class="g-next" id="next-4">1d</span>
+          </button>
+          <button class="grade-card g5" data-q="5">
+            <span class="g-num">5</span>
+            <span class="g-title">Perfect</span>
+            <span class="g-next" id="next-5">1d</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SESSION COMPLETE STATE -->
+      <div id="completeCard" class="complete-card glass hidden">
+        <div class="celebrate-icon">🏆</div>
+        <h2>Daily Queue Cleared!</h2>
+        <p>Every due flashcard has been rescheduled using the SuperMemo-2 algorithm.</p>
+        <div class="complete-actions">
+          <button id="cramAllBtn" class="btn btn-accent">Practice Full Deck</button>
+          <button id="goLbBtn" class="btn btn-ghost">View Cohort Rank</button>
+        </div>
+      </div>
+
+      <!-- CARD EXPLORER -->
+      <div class="explorer glass">
+        <div class="explorer-head">
+          <h3>Deck Explorer</h3>
+          <span class="muted-sm">Scheduled via SM-2 Ease Factor</span>
+        </div>
+        <div id="cardRows" class="card-rows"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: RETENTION DECAY CURVE -->
+    <section id="panel-curve" class="panel">
+      <div class="analytics-card glass">
+        <div class="analytics-head">
+          <div>
+            <h2>Ebbinghaus Forgetting & SM-2 Retention Curve</h2>
+            <p class="muted-sm">Projected recall probability $R = e^{-t/S}$ across spaced intervals</p>
+          </div>
+          <div class="ef-callout">Deck Mean EF: <strong id="deckMeanEf">2.50</strong></div>
+        </div>
+        <canvas id="curveCanvas" width="820" height="340"></canvas>
+      </div>
+    </section>
+
+    <!-- TAB 3: COHORT LEADERBOARD -->
+    <section id="panel-leaderboard" class="panel">
+      <div class="analytics-card glass">
+        <div class="analytics-head">
+          <div>
+            <h2>Cohort Study Leaderboard</h2>
+            <p class="muted-sm">Retention Points = (Cards Reviewed × 10) + (Streak Days × 25)</p>
+          </div>
+          <div class="ef-callout">Your Standing: <strong id="rankDisplay">#1</strong></div>
+        </div>
+        <table class="lb-grid">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Student</th>
+              <th>Streak Badge</th>
+              <th>Streak</th>
+              <th>Reviews</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="lbRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: CREATE DECK -->
+  <div id="modalDeck" class="overlay hidden">
+    <div class="modal-box glass">
+      <h3>Create New Deck</h3>
+      <input type="text" id="deckNameInput" placeholder="e.g., Computer Networks, DBMS..." />
+      <div class="modal-btns">
+        <button id="closeDeckBtn" class="btn btn-ghost">Cancel</button>
+        <button id="saveDeckBtn" class="btn btn-accent">Create Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE CARD -->
+  <div id="modalCard" class="overlay hidden">
+    <div class="modal-box wide glass">
+      <h3>Create Flashcard (Supports **bold** and `code`)</h3>
+      <div class="split-editor">
+        <div>
+          <label class="label-sm">QUESTION (FRONT)</label>
+          <textarea id="qInput" rows="3" placeholder="What is the time complexity of QuickSort?"></textarea>
+          <label class="label-sm">ANSWER (BACK)</label>
+          <textarea id="aInput" rows="3" placeholder="Average: `O(n log n)`, Worst: `O(n^2)`"></textarea>
+        </div>
+        <div class="preview-card">
+          <span class="label-sm">LIVE RENDER PREVIEW</span>
+          <div id="qPreview" class="preview-block">Question preview...</div>
+          <div class="divider"></div>
+          <div id="aPreview" class="preview-block">Answer preview...</div>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button id="closeCardBtn" class="btn btn-ghost">Cancel</button>
+        <button id="saveCardBtn" class="btn btn-accent">Save Flashcard</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
